@@ -15,14 +15,18 @@ const userSchema = new mongoose.Schema({
         trim:true
     },
 
-password:{
-    type:String,
-    required:true
+    password:{
+     type:String,
+     required:true,
+     select:false
 }
 
 },{timestamps:true})
 
 
-module.exports = mongoose.model('user',userSchema)
+const User = mongoose.model('User',userSchema)
+
+
+module.exports = User
 
 
