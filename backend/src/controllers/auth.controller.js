@@ -10,9 +10,28 @@ async function registerUser(req, res) {
     try {
 
         if (!name || !email || !password) return res.status(400).json({ message: 'fill all field' })
+
+
+        if (typeof password !== 'string') {
+            return res.status(400).json({
+                message: 'Password must be a string'
+            });
+        }
+
+        if (Buffer.byteLength(password, 'utf8') > 72) {
+            return res.status(400).json({
+                message: 'Password must not exceed 72 bytes'
+            });
+        }
+
+
+
         const user = await userModel.findOne({ email })
 
         if (user) return res.status(400).json({ message: "user already Registered" })
+
+
+
 
         const salt = await bcrypt.genSalt(10)
         const hashedPassword = await bcrypt.hash(password, salt)
@@ -47,9 +66,18 @@ async function registerUser(req, res) {
 
     } catch (error) {
 
-        res.status(500).json({ message: "server Error" })
-        console.log(error.message)
+    if (error.code === 11000) {
+        return res.status(409).json({
+            message: "user already Registered"
+        });
     }
+
+    console.log(error.message);
+
+    return res.status(500).json({
+        message: "server Error"
+    });
+}
 
 }
 
