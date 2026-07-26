@@ -1,7 +1,12 @@
 require('dotenv').config();
 
-const { expect } = require('chai');
-const { request } = require('chai-http');
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const { expect } = chai;
+
+const mongoose = require('mongoose');
+
+chai.use(chaiHttp);
 
 const app = require('../src/app');
 const connectToDb = require('../src/config/db');
@@ -12,20 +17,24 @@ describe('Auth API', () => {
         await connectToDb();
     });
 
+        after(async () => {
+            await mongoose.disconnect();
+        });
+
 
     it('should register a new user', async () => {
 
-        const res = await request.execute(app)
-            .post('/api/auth/register')
+    const res = await chai.request(app)
+        .post('/api/auth/register')
             .send({
                 name: 'Test User',
                 email: `test${Date.now()}@example.com`,
                 password: 'Password123'
             });
 
-        expect(res.status).to.equal(201);
-        expect(res.body).to.have.property('token');
-        expect(res.body.user).to.have.property('name', 'Test User');
+         expect(res.status).to.equal(201);
+             expect(res.body).to.have.property('token');
+                 expect(res.body.user).to.have.property('name', 'Test User');
 
     });
 
@@ -35,9 +44,9 @@ describe('Auth API', () => {
         const email = `login${Date.now()}@example.com`;
         const password = 'Password123';
 
-        // First register the user
-        await request.execute(app)
-            .post('/api/auth/register')
+
+    const registerRes = await chai.request(app)
+        .post('/api/auth/register')
             .send({
                 name: 'Login Test User',
                 email,
@@ -45,18 +54,19 @@ describe('Auth API', () => {
             });
 
 
-        // Then login with the same credentials
-        const res = await request.execute(app)
+        expect(registerRes.status).to.equal(201);
+
+
+        const res = await chai.request(app)
             .post('/api/auth/login')
-            .send({
-                email,
-                password
+                .send({
+                   email,
+                  password
             });
 
-
         expect(res.status).to.equal(200);
-        expect(res.body).to.have.property('token');
-        expect(res.body.user).to.have.property('email', email);
+            expect(res.body).to.have.property('token');
+                 expect(res.body.user).to.have.property('email', email);
 
     });
 
@@ -67,38 +77,39 @@ describe('Auth API', () => {
         const password = 'Password123';
 
 
-        // First register the user
-        await request.execute(app)
+        const registerRes = await chai.request(app)
             .post('/api/auth/register')
-            .send({
+                 .send({
                 name: 'Profile Test User',
                 email,
                 password
             });
 
+        expect(registerRes.status).to.equal(201);
 
-        // Login to get JWT token
-        const loginRes = await request.execute(app)
+
+        const loginRes = await chai.request(app)
             .post('/api/auth/login')
-            .send({
+              .send({
                 email,
                 password
             });
 
+        expect(loginRes.status).to.equal(200);
+        expect(loginRes.body).to.have.property('token');
 
         const token = loginRes.body.token;
 
 
-        // Request profile with JWT token
-        const res = await request.execute(app)
+        const res = await chai.request(app)
             .get('/api/auth/me')
             .set('Authorization', `Bearer ${token}`);
 
 
         expect(res.status).to.equal(200);
-        expect(res.body).to.have.property('message', 'current user');
-        expect(res.body.user).to.have.property('name', 'Profile Test User');
-        expect(res.body.user).to.have.property('email', email);
+         expect(res.body).to.have.property('message', 'current user');
+          expect(res.body.user).to.have.property('name', 'Profile Test User');
+           expect(res.body.user).to.have.property('email', email);
 
     });
 
@@ -107,7 +118,7 @@ describe('Auth API', () => {
 
         const longPassword = 'a'.repeat(73);
 
-        const res = await request.execute(app)
+        const res = await chai.request(app)
             .post('/api/auth/register')
             .send({
                 name: 'Long Password User',
@@ -126,34 +137,36 @@ describe('Auth API', () => {
     });
 
 
-
-
     it('should reject duplicate email registration', async () => {
 
-    const email = `duplicate${Date.now()}@example.com`;
+        const email = `duplicate${Date.now()}@example.com`;
 
-    await request.execute(app)
-        .post('/api/auth/register')
-        .send({
-            name: 'First User',
-            email,
-            password: 'Password123'
-        });
 
-    const res = await request.execute(app)
-        .post('/api/auth/register')
-        .send({
-            name: 'Second User',
-            email,
-            password: 'Password123'
-        });
+        const firstRes = await chai.request(app)
+            .post('/api/auth/register')
+            .send({
+                name: 'First User',
+                email,
+                password: 'Password123'
+            });
 
-    expect(res.status).to.equal(400);
-    expect(res.body).to.have.property(
-        'message',
-        'user already Registered'
-    );
+        expect(firstRes.status).to.equal(201);
 
-});
+
+        const res = await chai.request(app)
+            .post('/api/auth/register')
+            .send({
+                name: 'Second User',
+                email,
+                password: 'Password123'
+            });
+
+        expect(res.status).to.equal(400);
+        expect(res.body).to.have.property(
+            'message',
+            'user already Registered'
+        );
+
+    });
 
 });
