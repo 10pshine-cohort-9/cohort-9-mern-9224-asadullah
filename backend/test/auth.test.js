@@ -14,15 +14,32 @@ const connectToDb = require('../src/config/db');
 describe('Auth API', () => {
 
     before(async () => {
-        await connectToDb();
+
+        try {
+            await connectToDb();
+            
+        } catch (error) {
+            throw new Error(`Database connection failed: ${error.message}`);
+            
+        }
     });
 
         after(async () => {
-            await mongoose.disconnect();
+
+            try {
+                await mongoose.disconnect();
+                
+            } catch (error) {
+                    throw new Error(`Database disconnection failed: ${error.message}`);
+                
+            }
         });
 
 
     it('should register a new user', async () => {
+        try {
+            
+       
 
     const res = await chai.request(app)
         .post('/api/auth/register')
@@ -36,10 +53,19 @@ describe('Auth API', () => {
              expect(res.body).to.have.property('token');
                  expect(res.body.user).to.have.property('name', 'Test User');
 
+             } catch (error) {
+                throw new Error(`User registration test failed: ${error.message}`);
+            
+        }
+
     });
 
 
     it('should login an existing user', async () => {
+
+        try {
+            
+     
 
         const email = `login${Date.now()}@example.com`;
         const password = 'Password123';
@@ -68,10 +94,19 @@ describe('Auth API', () => {
             expect(res.body).to.have.property('token');
                  expect(res.body.user).to.have.property('email', email);
 
+                } catch (error) {
+                    throw new Error(`User login test failed: ${error.message}`);
+            
+        }
+
     });
 
 
     it('should get current user profile with valid token', async () => {
+
+        try {
+            
+     
 
         const email = `profile${Date.now()}@example.com`;
         const password = 'Password123';
@@ -111,10 +146,19 @@ describe('Auth API', () => {
           expect(res.body.user).to.have.property('name', 'Profile Test User');
            expect(res.body.user).to.have.property('email', email);
 
+              } catch (error) {
+                throw new Error(`Current user profile test failed: ${error.message}`);
+            
+        }
+
     });
 
 
     it('should reject password longer than 72 bytes', async () => {
+
+        try {
+            
+       
 
         const longPassword = 'a'.repeat(73);
 
@@ -134,10 +178,18 @@ describe('Auth API', () => {
             'Password must not exceed 72 bytes'
         );
 
+         } catch (error) {
+            throw new Error(`Long password validation test failed: ${error.message}`);
+        }
+
     });
 
 
     it('should reject duplicate email registration', async () => {
+
+        try {
+            
+       
 
         const email = `duplicate${Date.now()}@example.com`;
 
@@ -167,6 +219,17 @@ describe('Auth API', () => {
             'user already Registered'
         );
 
+         } catch (error) {
+            throw new Error(`Duplicate email registration test failed: ${error.message}`);
+            
+        }
+
+        
+
     });
+
+    
+
+    
 
 });
