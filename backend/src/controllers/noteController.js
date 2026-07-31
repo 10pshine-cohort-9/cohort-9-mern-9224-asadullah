@@ -135,6 +135,27 @@ const updateNote = async (req, res, next) => {
 
         const updateData = {}
 
+        if (title !== undefined) {
+            if (typeof title !== 'string' || !title.trim()) {
+                return res.status(400).json({
+                    message: "Title must be a non-empty string"
+                })
+            }
+
+            updateData.title = title.trim()
+        }
+
+        if (content !== undefined) {
+            if (typeof content !== 'string' || !content.trim()) {
+                return res.status(400).json({
+                    message: "Content must be a non-empty string"
+                })
+            }
+
+            updateData.content = content.trim()
+        }
+
+
         if (title) {
             updateData.title = title;
         }
@@ -149,7 +170,8 @@ const updateNote = async (req, res, next) => {
         },
             updateData,
             {
-                new: true
+                new: true,
+                runValidators: true
             }
         )
 
