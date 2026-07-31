@@ -11,9 +11,9 @@ chai.use(chaiHttp);
 const app = require('../src/app');
 const connectToDb = require('../src/config/db');
 
-describe('Auth API', function () {
+describe('Auth API', () => {
 
-    before(async () => {
+    before(async function () {
 
         try {
             this.timeout(10000)
