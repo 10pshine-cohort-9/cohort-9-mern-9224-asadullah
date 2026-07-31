@@ -131,7 +131,11 @@ const updateNote = async (req, res, next) => {
             })
         }
 
-        if (!title && !content) return res.status(400).json({ message: "fill at least one field to update" })
+       if (title === undefined && content === undefined) {
+    return res.status(400).json({
+        message: "Provide at least one field to update"
+    })
+}
 
         const updateData = {}
 
@@ -156,14 +160,6 @@ const updateNote = async (req, res, next) => {
         }
 
 
-        if (title) {
-            updateData.title = title;
-        }
-
-        if (content) {
-            updateData.content = content;
-        }
-
         const updateNote = await noteModel.findOneAndUpdate({
             user,
             _id: noteId
@@ -181,16 +177,18 @@ const updateNote = async (req, res, next) => {
             });
         }
 
-        logger.info('note updated successfully')
+         logger.info(
+            {
+                noteId,
+                userId: user
+            },
+            "Note updated successfully"
+        )
 
         return res.status(200).json({
             message: "note Updated",
             note: updateNote
         })
-
-
-
-
 
 
     } catch (error) {
