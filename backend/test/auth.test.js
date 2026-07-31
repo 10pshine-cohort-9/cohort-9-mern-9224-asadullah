@@ -11,11 +11,12 @@ chai.use(chaiHttp);
 const app = require('../src/app');
 const connectToDb = require('../src/config/db');
 
-describe('Auth API', () => {
+describe('Auth API', function () {
 
     before(async () => {
 
         try {
+            this.timeout(10000)
             await connectToDb();
             
         } catch (error) {

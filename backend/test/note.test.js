@@ -22,10 +22,11 @@ let testUser = {
 
 describe('Notes API', () => {
 
-    before(async () => {
+    before(async function () {
 
         try {
 
+            this.timeout(10000)
             await connectToDb();
 
             const registerRes = await chai

@@ -1,5 +1,6 @@
 const noteModel = require('../models/Note');
 const logger = require('../utils/logger');
+const mongoose = require('mongoose')
 
 
 
@@ -7,7 +8,7 @@ const createNote = async (req, res, next) => {
 
     try {
 
-         
+
         const { title, content } = req.body
 
         if (!title || !content) return res.status(400).json({ message: 'fill empty fields' })
@@ -26,7 +27,7 @@ const createNote = async (req, res, next) => {
             note
         })
 
-       
+
 
     } catch (error) {
 
@@ -48,7 +49,12 @@ const getNotes = async (req, res, next) => {
         const notes = await noteModel.find({ user })
 
 
-        logger.info(notes, 'notes fetched successfully')
+        logger.info({
+            userId: user, count: notes.length
+
+        },
+            'notes fetched successfully'
+        )
 
         res.status(200).json({
             message: "notes fetched successfully",
@@ -73,6 +79,12 @@ const getNoteById = async (req, res, next) => {
     const user = req.user.userId
 
     try {
+
+        if (!mongoose.isObjectIdOrHexString(noteId)) {
+            return res.status(400).json({
+                message: "Invalid note ID"
+            })
+        }
 
 
         const note = await noteModel.findOne({
@@ -112,6 +124,12 @@ const updateNote = async (req, res, next) => {
     const { title, content } = req.body
 
     try {
+
+        if (!mongoose.isObjectIdOrHexString(noteId)) {
+            return res.status(400).json({
+                message: "Invalid note ID"
+            })
+        }
 
         if (!title && !content) return res.status(400).json({ message: "fill at least one field to update" })
 
@@ -171,6 +189,12 @@ const deleteNote = async (req, res, next) => {
     const user = req.user.userId
 
     try {
+
+        if (!mongoose.isObjectIdOrHexString(noteId)) {
+            return res.status(400).json({
+                message: "Invalid note ID"
+            })
+        }
 
         const deletedNote = await noteModel.findOneAndDelete({
             _id: noteId,
