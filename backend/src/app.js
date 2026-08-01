@@ -9,9 +9,10 @@ const httpLogger = require('./middleware/httpLogger.middleware')
 const app = express()
 
 
-app.use(express.json())
 
 app.use(httpLogger)
+
+app.use(express.json())
 
 logger.info("application working")
 

@@ -9,7 +9,7 @@ const httpLogger = (req, res, next) => {
         logger.info(
             {
                 method: req.method,
-                url: req.originalUrl,
+                url: req.path,
                 statusCode: res.statusCode,
                 responseTime: `${time}ms`,
             },

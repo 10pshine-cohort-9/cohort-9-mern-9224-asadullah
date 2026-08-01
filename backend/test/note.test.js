@@ -156,6 +156,9 @@ describe('Notes API', () => {
 
     it('should reject creating a note without title', async () => {
 
+        try {
+            
+       
         const res = await chai
             .request(app)
             .post('/api/notes')
@@ -166,6 +169,12 @@ describe('Notes API', () => {
 
         expect(res.status).to.equal(400);
 
+         } catch (error) {
+             throw new Error(`Create note without title test failed: ${error.message}`);
+            
+        }
+
+
     });
 
 
@@ -173,6 +182,10 @@ describe('Notes API', () => {
 
 
     it('should reject creating a note without content', async () => {
+
+        try {
+            
+       
 
         const res = await chai
             .request(app)
@@ -183,6 +196,11 @@ describe('Notes API', () => {
             });
 
         expect(res.status).to.equal(400);
+
+         } catch (error) {
+            throw new Error( `Create note without content test failed: ${error.message}`)
+            
+        }
 
     });
 
@@ -222,6 +240,10 @@ describe('Notes API', () => {
 
     it('should reject getting a note with invalid id', async () => {
 
+        try {
+            
+       
+
         const res = await chai
             .request(app)
             .get('/api/notes/invalid-id')
@@ -229,12 +251,20 @@ describe('Notes API', () => {
 
         expect(res.status).to.equal(400);
 
+         } catch (error) {
+            throw new Error(`Get note with invalid id test failed: ${error.message}`)
+            
+        }
+
     });
 
 
 
 
     it('should reject updating a note without fields', async () => {
+        try {
+            
+       
 
         const res = await chai
             .request(app)
@@ -244,12 +274,22 @@ describe('Notes API', () => {
 
         expect(res.status).to.equal(400);
 
+         } catch (error) {
+            throw new Error(`Update note without fields test failed: ${error.message}`)
+            
+        }
+
     });
 
 
 
 
     it('should reject updating a note with empty title', async () => {
+
+
+        try {
+            
+     
 
         const res = await chai
             .request(app)
@@ -260,6 +300,11 @@ describe('Notes API', () => {
             });
 
         expect(res.status).to.equal(400);
+           } catch (error) {
+
+            throw new Error(`Update note with empty title test failed: ${error.message}`)
+            
+        }
 
     });
 
