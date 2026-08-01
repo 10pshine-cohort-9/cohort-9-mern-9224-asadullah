@@ -154,6 +154,39 @@ describe('Notes API', () => {
     });
 
 
+    it('should reject creating a note without title', async () => {
+
+        const res = await chai
+            .request(app)
+            .post('/api/notes')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                content: 'This note has no title'
+            });
+
+        expect(res.status).to.equal(400);
+
+    });
+
+
+
+
+
+    it('should reject creating a note without content', async () => {
+
+        const res = await chai
+            .request(app)
+            .post('/api/notes')
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                title: 'This note has no content'
+            });
+
+        expect(res.status).to.equal(400);
+
+    });
+
+
     it('should get all notes of the current user', async () => {
 
         try {
@@ -184,6 +217,51 @@ describe('Notes API', () => {
 
     });
 
+
+
+
+    it('should reject getting a note with invalid id', async () => {
+
+        const res = await chai
+            .request(app)
+            .get('/api/notes/invalid-id')
+            .set('Authorization', `Bearer ${token}`);
+
+        expect(res.status).to.equal(400);
+
+    });
+
+
+
+
+    it('should reject updating a note without fields', async () => {
+
+        const res = await chai
+            .request(app)
+            .patch(`/api/notes/${noteId}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({});
+
+        expect(res.status).to.equal(400);
+
+    });
+
+
+
+
+    it('should reject updating a note with empty title', async () => {
+
+        const res = await chai
+            .request(app)
+            .patch(`/api/notes/${noteId}`)
+            .set('Authorization', `Bearer ${token}`)
+            .send({
+                title: '   '
+            });
+
+        expect(res.status).to.equal(400);
+
+    });
 
 
 
