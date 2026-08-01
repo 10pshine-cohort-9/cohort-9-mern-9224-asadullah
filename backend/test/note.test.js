@@ -82,7 +82,7 @@ describe('Notes API', () => {
 
 
 
-    it('should create a new note', async () => {
+it('should create a new note', async () => {
 
         try {
 
@@ -132,7 +132,6 @@ describe('Notes API', () => {
     it('should reject creating a note without token', async () => {
 
         try {
-
             const res = await chai
                 .request(app)
                 .post('/api/notes')
@@ -157,21 +156,19 @@ describe('Notes API', () => {
     it('should reject creating a note without title', async () => {
 
         try {
-            
-       
         const res = await chai
-            .request(app)
-            .post('/api/notes')
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-                content: 'This note has no title'
-            });
+                .request(app)
+                .post('/api/notes')
+                .set('Authorization', `Bearer ${token}`)
+                .send({
+                    content: 'This note has no title'
+                });
 
-        expect(res.status).to.equal(400);
+            expect(res.status).to.equal(400);
 
-         } catch (error) {
-             throw new Error(`Create note without title test failed: ${error.message}`);
-            
+        } catch (error) {
+            throw new Error(`Create note without title test failed: ${error.message}`);
+
         }
 
 
@@ -179,27 +176,24 @@ describe('Notes API', () => {
 
 
 
-
-
     it('should reject creating a note without content', async () => {
 
         try {
-            
-       
 
-        const res = await chai
-            .request(app)
-            .post('/api/notes')
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-                title: 'This note has no content'
-            });
 
-        expect(res.status).to.equal(400);
+            const res = await chai
+                .request(app)
+                .post('/api/notes')
+                .set('Authorization', `Bearer ${token}`)
+                .send({
+                    title: 'This note has no content'
+                });
 
-         } catch (error) {
-            throw new Error( `Create note without content test failed: ${error.message}`)
-            
+            expect(res.status).to.equal(400);
+
+        } catch (error) {
+            throw new Error(`Create note without content test failed: ${error.message}`)
+
         }
 
     });
@@ -241,19 +235,17 @@ describe('Notes API', () => {
     it('should reject getting a note with invalid id', async () => {
 
         try {
-            
-       
 
-        const res = await chai
-            .request(app)
-            .get('/api/notes/invalid-id')
-            .set('Authorization', `Bearer ${token}`);
+            const res = await chai
+                .request(app)
+                .get('/api/notes/invalid-id')
+                .set('Authorization', `Bearer ${token}`);
 
-        expect(res.status).to.equal(400);
+            expect(res.status).to.equal(400);
 
-         } catch (error) {
+        } catch (error) {
             throw new Error(`Get note with invalid id test failed: ${error.message}`)
-            
+
         }
 
     });
@@ -263,20 +255,20 @@ describe('Notes API', () => {
 
     it('should reject updating a note without fields', async () => {
         try {
-            
-       
 
-        const res = await chai
-            .request(app)
-            .patch(`/api/notes/${noteId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .send({});
 
-        expect(res.status).to.equal(400);
 
-         } catch (error) {
+            const res = await chai
+                .request(app)
+                .patch(`/api/notes/${noteId}`)
+                .set('Authorization', `Bearer ${token}`)
+                .send({});
+
+            expect(res.status).to.equal(400);
+
+        } catch (error) {
             throw new Error(`Update note without fields test failed: ${error.message}`)
-            
+
         }
 
     });
@@ -288,22 +280,22 @@ describe('Notes API', () => {
 
 
         try {
-            
-     
 
-        const res = await chai
-            .request(app)
-            .patch(`/api/notes/${noteId}`)
-            .set('Authorization', `Bearer ${token}`)
-            .send({
-                title: '   '
-            });
 
-        expect(res.status).to.equal(400);
-           } catch (error) {
+
+            const res = await chai
+                .request(app)
+                .patch(`/api/notes/${noteId}`)
+                .set('Authorization', `Bearer ${token}`)
+                .send({
+                    title: '   '
+                });
+
+            expect(res.status).to.equal(400);
+        } catch (error) {
 
             throw new Error(`Update note with empty title test failed: ${error.message}`)
-            
+
         }
 
     });
