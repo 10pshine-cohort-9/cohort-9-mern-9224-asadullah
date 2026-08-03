@@ -13,9 +13,10 @@ const connectToDb = require('../src/config/db');
 
 describe('Auth API', () => {
 
-    before(async () => {
+    before(async function () {
 
         try {
+            this.timeout(10000)
             await connectToDb();
             
         } catch (error) {

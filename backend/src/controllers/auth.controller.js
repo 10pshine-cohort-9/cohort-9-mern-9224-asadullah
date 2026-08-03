@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken')
 
 
 
-async function registerUser(req, res) {
+async function registerUser(req, res,next) {
     const { name, email, password } = req.body;
 
     try {
@@ -72,18 +72,14 @@ async function registerUser(req, res) {
         });
     }
 
-    console.log(error.message);
-
-    return res.status(500).json({
-        message: "server Error"
-    });
+    next(error)
 }
 
 }
 
 
 
-async function loginUser(req, res) {
+async function loginUser(req, res,next) {
 
     let { email, password } = req.body
 
@@ -117,8 +113,7 @@ async function loginUser(req, res) {
         });
 
     } catch (error) {
-        res.status(500).json({ message: "internal server Error" })
-        console.log(error.message)
+        next(error)
 
     }
 
@@ -126,7 +121,7 @@ async function loginUser(req, res) {
 
 
 
-async function getCurrentUser(req, res) {
+async function getCurrentUser(req, res, next) {
 
     try {
         const userId = req.user.userId
@@ -146,8 +141,7 @@ async function getCurrentUser(req, res) {
 
 
     } catch (error) {
-        console.log(error.message)
-        return res.status(500).json({ message: "internal server error" })
+       next(error)
 
     }
 }
