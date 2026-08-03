@@ -5,9 +5,15 @@ const noteRoutes = require('./routes/note.routes')
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/error.middleware')
 const httpLogger = require('./middleware/httpLogger.middleware')
+const cors = require('cors')
 
 const app = express()
 
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+  })
+)
 
 
 app.use(httpLogger)
