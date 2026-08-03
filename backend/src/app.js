@@ -4,9 +4,13 @@ const authRoutes = require('./routes/auth.routes')
 const noteRoutes = require('./routes/note.routes')
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/error.middleware')
+const httpLogger = require('./middleware/httpLogger.middleware')
 
 const app = express()
 
+
+
+app.use(httpLogger)
 
 app.use(express.json())
 

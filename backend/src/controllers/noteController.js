@@ -11,11 +11,20 @@ const createNote = async (req, res, next) => {
 
         const { title, content } = req.body
 
-        if (!title || !content) return res.status(400).json({ message: 'fill empty fields' })
+        if (
+            typeof title !== 'string' ||
+            !title.trim() ||
+            typeof content !== 'string' ||
+            !content.trim()
+        ) {
+            return res.status(400).json({
+                message: "Title and content must be non-empty strings"
+            })
+        }
 
         const note = await noteModel.create({
-            title,
-            content,
+            title: title.trim(),
+            content: content.trim(),
             user: req.user.userId
         })
 
@@ -28,14 +37,11 @@ const createNote = async (req, res, next) => {
         })
 
 
-
     } catch (error) {
 
         next(error)
 
     }
-
-
 
 
 }
@@ -131,11 +137,11 @@ const updateNote = async (req, res, next) => {
             })
         }
 
-       if (title === undefined && content === undefined) {
-    return res.status(400).json({
-        message: "Provide at least one field to update"
-    })
-}
+        if (title === undefined && content === undefined) {
+            return res.status(400).json({
+                message: "Provide at least one field to update"
+            })
+        }
 
         const updateData = {}
 
@@ -177,7 +183,7 @@ const updateNote = async (req, res, next) => {
             });
         }
 
-         logger.info(
+        logger.info(
             {
                 noteId,
                 userId: user
