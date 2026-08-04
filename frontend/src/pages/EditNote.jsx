@@ -14,33 +14,58 @@ const EditNote = () => {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [loadError, setLoadError] = useState(false)
+  const [retryKey, setRetryKey] = useState(0)
 
-  const fetchNoteDetails = useCallback(async () => {
-    if (!id || id === 'all') {
-      toast.error('Invalid Note ID')
-      navigate('/dashboard', { replace: true })
-      return
-    }
+  const fetchNoteDetails = useCallback(
+    async (signal) => {
+      if (!id || id === 'all') {
+        toast.error('Invalid Note ID')
+        navigate('/dashboard', { replace: true })
+        return
+      }
 
-    try {
-      // Direct note fetch by ID route
-      const response = await api.get(`/notes/${id}`)
-      const note = response.data?.note || response.data
+      try {
+        const response = await api.get(`/notes/${id}`, { signal })
+        const note = response.data?.note || response.data
 
-      setTitle(note.title || '')
-      setContent(note.content || '')
-    } catch (error) {
-      console.error('Fetch note error:', error.response?.data || error)
-      setLoadError(true);
-      toast.error(error.response?.data?.message || 'Failed to load note details')
-    } finally {
-      setLoading(false)
-    }
-  }, [id, navigate])
+        if (signal.aborted) return
+
+        setTitle(note.title || '')
+        setContent(note.content || '')
+        setLoadError(false)
+      } catch (error) {
+        if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+          return
+        }
+
+        console.error('Fetch note error:', error.response?.data || error)
+        setLoadError(true)
+        toast.error(
+          error.response?.data?.message || 'Failed to load note details'
+        )
+      } finally {
+        if (!signal.aborted) {
+          setLoading(false)
+        }
+      }
+    },
+    [id, navigate]
+  )
 
   useEffect(() => {
-    fetchNoteDetails()
-  }, [fetchNoteDetails])
+    const controller = new AbortController()
+
+    setTitle('')
+    setContent('')
+    setLoadError(false)
+    setLoading(true)
+
+    fetchNoteDetails(controller.signal)
+
+    return () => {
+      controller.abort()
+    }
+  }, [fetchNoteDetails,retryKey])
 
 
 
@@ -112,17 +137,12 @@ const EditNote = () => {
             </p>
 
             <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  setLoadError(false)
-                  setLoading(true)
-                  fetchNoteDetails()
-                }}
-                className="rounded-xl bg-cyan-600 hover:bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-all"
-              >
-                Retry
-              </button>
+             <button
+                  type="button"
+                  onClick={() => setRetryKey((prev) => prev + 1)}
+                  className="rounded-xl bg-cyan-600 hover:bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-all">
+                  Retry
+                </button>
 
               <Link
                 to="/dashboard"
