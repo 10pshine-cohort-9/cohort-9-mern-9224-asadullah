@@ -80,12 +80,12 @@ const handleRegister = async (e) =>{
 
           <form onSubmit={handleRegister} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-2">
+              <label htmlFor='name' className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-2">
                 Username
               </label>
               <div className="relative">
                 <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <input
+                <input id='name'
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
@@ -96,12 +96,12 @@ const handleRegister = async (e) =>{
             </div>
 
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-2">
+              <label htmlFor='email' className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-2">
                 Work Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <input
+                <input id='email'
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -112,12 +112,12 @@ const handleRegister = async (e) =>{
             </div>
 
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-2">
+              <label htmlFor='password' className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-2">
                 Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <input
+                <input id='password'
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -128,12 +128,12 @@ const handleRegister = async (e) =>{
             </div>
 
             <div>
-              <label className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-2">
+              <label htmlFor='confirm-password' className="block text-xs font-medium uppercase tracking-wider text-slate-300 mb-2">
                 Confirm Password
               </label>
               <div className="relative">
                 <ShieldCheck className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-                <input
+                <input id='confirm-password'
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}

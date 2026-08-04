@@ -13,6 +13,7 @@ const EditNote = () => {
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   const fetchNoteDetails = useCallback(async () => {
     if (!id || id === 'all') {
@@ -30,6 +31,7 @@ const EditNote = () => {
       setContent(note.content || '')
     } catch (error) {
       console.error('Fetch note error:', error.response?.data || error)
+      setLoadError(true);
       toast.error(error.response?.data?.message || 'Failed to load note details')
     } finally {
       setLoading(false)
@@ -41,29 +43,29 @@ const EditNote = () => {
   }, [fetchNoteDetails])
 
 
-  
-const handleSubmit = async (e) => {
-  e.preventDefault()
 
-  if (!title.trim() || !content.trim()) {
-    toast.error('Please fill in both title and content')
-    return
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (!title.trim() || !content.trim()) {
+      toast.error('Please fill in both title and content')
+      return
+    }
+
+    setSubmitting(true)
+
+    try {
+
+      await api.patch(`/notes/${id}`, { title, content })
+      toast.success('Note updated successfully')
+      navigate('/dashboard')
+    } catch (error) {
+      console.error('Update note error:', error.response?.data || error)
+      toast.error(error.response?.data?.message || 'Failed to update note')
+    } finally {
+      setSubmitting(false)
+    }
   }
-
-  setSubmitting(true)
-
-  try {
-   
-    await api.patch(`/notes/${id}`, { title, content })
-    toast.success('Note updated successfully')
-    navigate('/dashboard')
-  } catch (error) {
-    console.error('Update note error:', error.response?.data || error)
-    toast.error(error.response?.data?.message || 'Failed to update note')
-  } finally {
-    setSubmitting(false)
-  }
-}
 
 
   return (
@@ -93,17 +95,54 @@ const handleSubmit = async (e) => {
         {loading ? (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-800 bg-[#121826] p-16 shadow-xl">
             <Loader2 className="h-8 w-8 animate-spin text-cyan-400 mb-3" />
-            <p className="text-sm text-slate-400">Fetching note details from server...</p>
+            <p className="text-sm text-slate-400">
+              Fetching note details from server...
+            </p>
+          </div>
+        ) : loadError ? (
+          <div className="flex flex-col items-center justify-center rounded-2xl border border-slate-800 bg-[#121826] p-16 shadow-xl text-center">
+            <FileEdit className="h-10 w-10 text-red-400 mb-4" />
+
+            <h2 className="text-xl font-bold text-white mb-2">
+              Failed to Load Note
+            </h2>
+
+            <p className="text-sm text-slate-400 mb-6">
+              We couldn't load this note. Please try again or return to the dashboard.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setLoadError(false)
+                  setLoading(true)
+                  fetchNoteDetails()
+                }}
+                className="rounded-xl bg-cyan-600 hover:bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-all"
+              >
+                Retry
+              </button>
+
+              <Link
+                to="/dashboard"
+                className="rounded-xl border border-slate-700/80 bg-[#1A2234] px-5 py-2.5 text-sm font-semibold text-slate-300 hover:bg-slate-800 hover:text-white transition-all"
+              >
+                Back to Dashboard
+              </Link>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
+
+
             <div className="rounded-2xl border border-slate-800/80 bg-[#121826] p-6 sm:p-8 shadow-xl shadow-black/40">
-         
+
               <div className="mb-6">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                <label htmlFor='title' className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                   Note Title
                 </label>
-                <input
+                <input id='title'
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -114,10 +153,10 @@ const handleSubmit = async (e) => {
               </div>
 
               <div className="mb-6">
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+                <label htmlFor='content' className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                   Content Body
                 </label>
-                <textarea
+                <textarea id='content'
                   rows={10}
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
@@ -127,7 +166,7 @@ const handleSubmit = async (e) => {
                 />
               </div>
 
-          
+
               <div className="flex items-center justify-end gap-3 border-t border-slate-800/80 pt-6">
                 <Link
                   to="/dashboard"

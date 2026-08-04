@@ -67,10 +67,10 @@ const CreateNote = () => {
           <div className="rounded-2xl border border-slate-800/80 bg-[#121826] p-6 sm:p-8 shadow-xl shadow-black/40">
             
             <div className="mb-6">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+              <label htmlFor='title' className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                 Note Title
               </label>
-              <input
+              <input id='title'
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -81,10 +81,11 @@ const CreateNote = () => {
             </div>
 
             <div className="mb-6">
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
+              <label htmlFor='content' className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                 Content Body
               </label>
-              <textarea
+              <textarea 
+              id='content'
                 rows={10}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
