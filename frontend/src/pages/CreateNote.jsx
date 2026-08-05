@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast'
 import { ArrowLeft, PlusCircle, Sparkles, Loader2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import api from '../services/api'
+import RichTextEditor from '../components/RichTextEditor'
 
 const CreateNote = () => {
   const navigate = useNavigate()
@@ -38,7 +39,7 @@ const CreateNote = () => {
       <Navbar />
 
       <main className="mx-auto max-w-4xl px-6 py-10">
-    
+
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-800/80 pb-6">
           <div>
             <Link
@@ -62,10 +63,10 @@ const CreateNote = () => {
           </div>
         </div>
 
-       
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="rounded-2xl border border-slate-800/80 bg-[#121826] p-6 sm:p-8 shadow-xl shadow-black/40">
-            
+
             <div className="mb-6">
               <label htmlFor='title' className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                 Note Title
@@ -84,18 +85,12 @@ const CreateNote = () => {
               <label htmlFor='content' className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                 Content Body
               </label>
-              <textarea 
-              id='content'
-                rows={10}
+              <RichTextEditor
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your note details here..."
-                className="w-full rounded-xl bg-[#1A2234] border border-slate-700/60 px-4 py-3 text-sm text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all leading-relaxed shadow-inner resize-y"
-                required
-              />
+                onChange={setContent}/>
             </div>
 
-           
+
             <div className="flex items-center justify-end gap-3 border-t border-slate-800/80 pt-6">
               <Link
                 to="/dashboard"

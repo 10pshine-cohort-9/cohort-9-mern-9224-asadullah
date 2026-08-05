@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.jsx'
 import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import 'react-quill-new/dist/quill.snow.css'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
