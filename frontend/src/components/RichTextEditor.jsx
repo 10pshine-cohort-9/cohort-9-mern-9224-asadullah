@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import ReactQuill from 'react-quill-new'
 
-const RichTextEditor = ({ value, onChange,  ariaLabel }) => {
+const RichTextEditor = ({ value, onChange,  ariaLabel, id  }) => {
 
   const quillRef = useRef(null)
 
@@ -9,6 +9,7 @@ const RichTextEditor = ({ value, onChange,  ariaLabel }) => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor().root
       editor.setAttribute('aria-label', ariaLabel)
+      editor.setAttribute('id', id)
     }
   }, [ariaLabel])
 

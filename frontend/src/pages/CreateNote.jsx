@@ -100,6 +100,7 @@ const CreateNote = () => {
                 Content Body
               </label>
               <RichTextEditor
+                id="content"
                 value={content}
                 ariaLabel="Note Content"
                 onChange={setContent} />

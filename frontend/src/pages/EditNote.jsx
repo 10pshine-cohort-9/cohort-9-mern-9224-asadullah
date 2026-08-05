@@ -85,7 +85,7 @@ const EditNote = () => {
     e.preventDefault()
 
   if (!title.trim() || !getPlainText(content)) {
-    
+
       toast.error('Please fill in both title and content')
       return
     }
@@ -190,6 +190,7 @@ const EditNote = () => {
                   Content Body
                 </label>
                 <RichTextEditor
+                 id="content"
                   value={content}
                     ariaLabel="Note Content"
                   onChange={setContent}
