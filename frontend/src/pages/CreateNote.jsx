@@ -12,10 +12,24 @@ const CreateNote = () => {
   const [content, setContent] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+
+
+
+
+  const getPlainText = (html) => {
+
+    const div = document.createElement('div')
+
+    div.innerHTML = html
+
+
+    return div.textContent.trim()
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!title.trim() || !content.trim()) {
+    if (!title.trim() || !getPlainText(content)) {
       toast.error('Please fill in both title and content')
       return
     }
@@ -87,7 +101,8 @@ const CreateNote = () => {
               </label>
               <RichTextEditor
                 value={content}
-                onChange={setContent}/>
+                ariaLabel="Note Content"
+                onChange={setContent} />
             </div>
 
 
