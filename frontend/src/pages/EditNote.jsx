@@ -5,6 +5,8 @@ import { ArrowLeft, Save, FileEdit, Sparkles, Loader2 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import api from '../services/api'
 
+import RichTextEditor from '../components/RichTextEditor'
+
 const EditNote = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -65,14 +67,25 @@ const EditNote = () => {
     return () => {
       controller.abort()
     }
-  }, [fetchNoteDetails,retryKey])
+  }, [fetchNoteDetails, retryKey])
 
+
+
+  const getPlainText = (html) => {
+
+  const div = document.createElement('div')
+
+  div.innerHTML = html
+
+  return div.textContent.trim()
+}
 
 
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (!title.trim() || !content.trim()) {
+  if (!title.trim() || !getPlainText(content)) {
+
       toast.error('Please fill in both title and content')
       return
     }
@@ -137,12 +150,12 @@ const EditNote = () => {
             </p>
 
             <div className="flex gap-3">
-             <button
-                  type="button"
-                  onClick={() => setRetryKey((prev) => prev + 1)}
-                  className="rounded-xl bg-cyan-600 hover:bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-all">
-                  Retry
-                </button>
+              <button
+                type="button"
+                onClick={() => setRetryKey((prev) => prev + 1)}
+                className="rounded-xl bg-cyan-600 hover:bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white transition-all">
+                Retry
+              </button>
 
               <Link
                 to="/dashboard"
@@ -176,15 +189,15 @@ const EditNote = () => {
                 <label htmlFor='content' className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
                   Content Body
                 </label>
-                <textarea id='content'
-                  rows={10}
+                <RichTextEditor
+                 id="content"
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Write note details or technical logs here..."
-                  className="w-full rounded-xl bg-[#1A2234] border border-slate-700/60 px-4 py-3 text-sm text-slate-200 placeholder-slate-500 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all leading-relaxed shadow-inner resize-y"
-                  required
+                    ariaLabel="Note Content"
+                  onChange={setContent}
                 />
+
               </div>
+
 
 
               <div className="flex items-center justify-end gap-3 border-t border-slate-800/80 pt-6">
@@ -195,28 +208,40 @@ const EditNote = () => {
                   Cancel
                 </Link>
 
+
                 <button
                   type="submit"
                   disabled={submitting}
                   className="flex items-center gap-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 px-6 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-950/50 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
+
+
                   {submitting ? (
+
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       <span>Saving...</span>
                     </>
+
                   ) : (
                     <>
                       <Save className="h-4 w-4" />
                       <span>Save Changes</span>
                     </>
                   )}
+
                 </button>
+
               </div>
+
             </div>
+
           </form>
+
         )}
+
       </main>
+
     </div>
   )
 }
