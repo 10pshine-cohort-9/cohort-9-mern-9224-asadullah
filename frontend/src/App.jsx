@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import CreateNote from './pages/CreateNote'
 import EditNote from './pages/EditNote'
 import ProtectedRoute from './components/ProtectedRoute'
+import Profile from './pages/Profile'
 
 const App = () => {
   return (
@@ -12,7 +13,7 @@ const App = () => {
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      
+
       <Route
         path="/dashboard"
         element={
@@ -34,6 +35,16 @@ const App = () => {
         element={
           <ProtectedRoute>
             <EditNote />
+          </ProtectedRoute>
+        }
+      />
+
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+              <Profile />
           </ProtectedRoute>
         }
       />
