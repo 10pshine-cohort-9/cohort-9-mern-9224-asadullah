@@ -15,6 +15,10 @@ const JsonExportImport = ({ notes = [], setNotes }) => {
   }
 
   const getNoteData = (noteObj) => {
+    if (!noteObj || typeof noteObj !== 'object' || Array.isArray(noteObj)) {
+      return { title: '', content: '' }
+    }
+
     const title = noteObj.title || noteObj.Title || ''
     const rawContent = noteObj.content || noteObj.Content || ''
 
@@ -97,15 +101,20 @@ const JsonExportImport = ({ notes = [], setNotes }) => {
 
         toast.loading('Importing notes...', { id: 'importStatus' })
 
-        const importPromises = validNotes.map((note) =>
-          api.post('/notes', {
-            title: note.title,
-            content: note.content,
-          })
-        )
+        const createdNotes = []
 
-        const responses = await Promise.all(importPromises)
-        const createdNotes = responses.map((res) => res.data.note || res.data)
+        for (const note of validNotes) {
+          try {
+            const response = await api.post('/notes', {
+              title: note.title,
+              content: note.content,
+            })
+
+            createdNotes.push(response.data.note || response.data)
+          } catch (error) {
+            console.error(`Failed to import note: ${note.title}`, error)
+          }
+        }
 
         setNotes((prevNotes) => [...prevNotes, ...createdNotes])
         toast.success(`${createdNotes.length} notes imported successfully!`, {
@@ -155,15 +164,20 @@ const JsonExportImport = ({ notes = [], setNotes }) => {
 
         toast.loading('Importing Excel notes...', { id: 'importStatus' })
 
-        const importPromises = validNotes.map((note) =>
-          api.post('/notes', {
-            title: note.title,
-            content: note.content,
-          })
-        )
+        const createdNotes = []
 
-        const responses = await Promise.all(importPromises)
-        const createdNotes = responses.map((res) => res.data.note || res.data)
+        for (const note of validNotes) {
+          try {
+            const response = await api.post('/notes', {
+              title: note.title,
+              content: note.content,
+            })
+
+            createdNotes.push(response.data.note || response.data)
+          } catch (error) {
+            console.error(`Failed to import note: ${note.title}`, error)
+          }
+        }
 
         setNotes((prevNotes) => [...prevNotes, ...createdNotes])
         toast.success(
@@ -183,7 +197,7 @@ const JsonExportImport = ({ notes = [], setNotes }) => {
 
     reader.readAsArrayBuffer(file)
   }
-  
+
 
   return (
     <div className="flex flex-wrap items-center gap-2">

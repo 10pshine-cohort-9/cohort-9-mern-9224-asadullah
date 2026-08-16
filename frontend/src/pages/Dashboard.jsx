@@ -13,9 +13,17 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('newest')
 
+
+   const stripHtml = (htmlString) => {
+    if (!htmlString || typeof htmlString !== 'string') return ''
+
+    const doc = new DOMParser().parseFromString(htmlString, 'text/html')
+    return (doc.body.textContent || '').trim()
+  }
+
   const fetchNotes = useCallback(async () => {
     const token = localStorage.getItem('token')
-    
+
     if (!token) {
       toast.error('Session expired. Please login again.')
       navigate('/login', { replace: true })
@@ -58,11 +66,14 @@ const Dashboard = () => {
   const isFilterActive = searchQuery !== '' || sortBy !== 'newest'
 
   const filteredNotes = notes
-    .filter(
-      (note) =>
-        note.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        note.content?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+    .filter((note) => {
+      const query = searchQuery.trim().toLowerCase()
+      const title = note.title?.toLowerCase() || ''
+      const content = stripHtml(note.content).toLowerCase()
+
+      return title.includes(query) || content.includes(query)
+    })
+
     .sort((a, b) => {
       if (sortBy === 'newest') {
         return new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
@@ -84,7 +95,7 @@ const Dashboard = () => {
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-6 py-8">
-        
+
         <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-center border-b border-slate-800/80 pb-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-semibold uppercase tracking-wider mb-2">
@@ -108,13 +119,14 @@ const Dashboard = () => {
         </div>
 
         <div className="mb-8 flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
-          
+
           <div className="flex flex-wrap items-center gap-3 flex-1">
-            
+
             <div className="relative flex-1 min-w-60 sm:max-w-md">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
               <input
                 type="text"
+                 aria-label="Search notes by title or content"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search notes by title or content..."
@@ -136,6 +148,7 @@ const Dashboard = () => {
               <Filter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 pointer-events-none" />
               <select
                 value={sortBy}
+                aria-label="Sort notes"
                 onChange={(e) => setSortBy(e.target.value)}
                 className="w-full rounded-xl bg-[#161C2A] border border-slate-800 pl-9 pr-4 py-2.5 text-sm text-slate-300 outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-all cursor-pointer appearance-none"
               >
@@ -175,7 +188,7 @@ const Dashboard = () => {
             ))}
           </div>
         ) : filteredNotes.length === 0 ? (
-          
+
           <div className="rounded-2xl border border-dashed border-slate-800 bg-[#111622] p-12 text-center">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 border border-violet-500/20 text-violet-400">
               <FolderOpen className="h-6 w-6" />
@@ -206,7 +219,7 @@ const Dashboard = () => {
             )}
           </div>
         ) : (
-          
+
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filteredNotes.map((note) => (
               <div
