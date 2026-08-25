@@ -108,6 +108,12 @@ const Dashboard = () => {
     if (!window.confirm('Are you sure you want to delete this category?')) return
     try {
       await api.delete(`/categories/${categoryId}`)
+
+      if (selectedCategory === categoryId) {
+        setSelectedCategory('');
+      }
+
+      
       toast.success('Category deleted')
       fetchCategories()
     } catch (err) {

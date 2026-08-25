@@ -40,10 +40,10 @@ const createCategory = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "Unauthorized access" });
     }
 
-    if (!name || !name.trim()) {
-      return res.status(400).json({ message: "Category name is required" });
-    }
-
+ if (!name || typeof name !== "string" || !name.trim()) {
+    return res.status(400).json({ message: "Category name is required and must be a string" });
+  }
+  
     const trimmedName = name.trim();
     const safeRegex = new RegExp(`^${escapeRegex(trimmedName)}$`, "i");
 
