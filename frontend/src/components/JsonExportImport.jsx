@@ -169,31 +169,33 @@ const JsonExportImport = ({ notes = [], setNotes, categories = [], fetchNotes })
     toast.success('Exported as Excel')
   }
 
-  const handleExportTxt = () => {
-    setShowExportMenu?.(false)
-    if (!notes || notes.length === 0) return toast.error('No notes to export')
 
-    const txtContent = notes
-      .map((note) => {
-        const title = note.title || 'Untitled'
-        const category = getCategoryName(note.category)
-        const content = stripHtml(note.content || '')
+const handleExportTxt = () => {
+  setShowExportMenu?.(false)
+  if (!notes || notes.length === 0) return toast.error('No notes to export')
 
-        return `[NOTE: ${title}]\nCategory: ${category}\nContent:\n${content}`
-      })
-      .join('\n\n')
+  const txtContent = notes
+    .map((note) => {
+      
+      const safeTitle = (note.title || 'Untitled').replace(/\]/g, '\\]')
+      const categoryName = getCategoryName(note.category)
+      const cleanContent = stripHtml(note.content || '')
 
-    const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `notes_export_${Date.now()}.txt`
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-    toast.success('Exported as Plain TXT')
-  }
+      return `[NOTE: ${safeTitle}]\nCategory: ${categoryName}\nContent: ${cleanContent}\n`
+    })
+    .join('\n---\n\n')
+
+  const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `notes_export_${Date.now()}.txt`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+  toast.success('Exported as TXT')
+}
 
   const handleImportJson = (e) => {
     const file = e.target.files[0]
@@ -253,16 +255,16 @@ const JsonExportImport = ({ notes = [], setNotes, categories = [], fetchNotes })
         const parsedNotes = []
 
         
-        if (text.includes('NOTE_START:')) {
-          const regex = /NOTE_START:(.*?):NOTE_END/gs
+        if (text.includes('NOTE_REC:')) {
+          const regex = /NOTE_REC:(.*?):NOTE_END/gs
           let match
           while ((match = regex.exec(text)) !== null) {
             try {
               const base64Data = match[1].trim()
-              const binString = atob(base64Data)
-              const bytes = new Uint8Array(binString.length)
-              for (let i = 0; i < binString.length; i++) {
-                bytes[i] = binString.charCodeAt(i)
+              const binaryString = atob(base64Data)
+              const bytes = new Uint8Array(binaryString.length)
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i)
               }
               const jsonStr = new TextDecoder().decode(bytes)
               const noteObj = JSON.parse(jsonStr)
@@ -276,12 +278,40 @@ const JsonExportImport = ({ notes = [], setNotes, categories = [], fetchNotes })
                 })
               }
             } catch (err) {
-              console.error('Base64 decode failed:', err)
+              console.error('Failed to parse NOTE_REC block:', err)
             }
           }
         }
 
-    
+        
+        if (parsedNotes.length === 0 && text.includes('NOTE_START:')) {
+          const regex = /NOTE_START:(.*?):NOTE_END/gs
+          let match
+          while ((match = regex.exec(text)) !== null) {
+            try {
+              const base64Data = match[1].trim()
+              const binaryString = atob(base64Data)
+              const bytes = new Uint8Array(binaryString.length)
+              for (let i = 0; i < binaryString.length; i++) {
+                bytes[i] = binaryString.charCodeAt(i)
+              }
+              const jsonStr = new TextDecoder().decode(bytes)
+              const noteObj = JSON.parse(jsonStr)
+
+              if (noteObj && noteObj.title) {
+                parsedNotes.push({
+                  title: noteObj.title,
+                  content: noteObj.content || '',
+                  category: resolveCategoryId(noteObj.category),
+                  categoryName: noteObj.category || 'No Category',
+                })
+              }
+            } catch (err) {
+              console.error('Legacy Base64 decode failed:', err)
+            }
+          }
+        }
+
         if (parsedNotes.length === 0 && text.includes('[NOTE:')) {
           const blocks = text.split(/(?=\[NOTE:)/)
           for (const block of blocks) {
@@ -301,7 +331,7 @@ const JsonExportImport = ({ notes = [], setNotes, categories = [], fetchNotes })
           }
         }
 
-    
+  
         if (parsedNotes.length === 0 && text.trim().length > 0) {
           const fileNameClean = file.name.replace(/\.[^/.]+$/, '')
           parsedNotes.push({
@@ -327,15 +357,14 @@ const JsonExportImport = ({ notes = [], setNotes, categories = [], fetchNotes })
     reader.readAsText(file)
   }
 
-
   return (
     <div className="flex items-center gap-2">
-    
+
       <input type="file" ref={jsonInputRef} onChange={handleImportJson} accept=".json" className="hidden" />
       <input type="file" ref={excelInputRef} onChange={handleImportExcel} accept=".xlsx, .xls" className="hidden" />
       <input type="file" ref={txtInputRef} onChange={handleImportTxt} accept=".txt" className="hidden" />
 
-     
+
       <div className="relative" ref={exportRef}>
         <button
           type="button"
@@ -374,7 +403,7 @@ const JsonExportImport = ({ notes = [], setNotes, categories = [], fetchNotes })
         )}
       </div>
 
-     
+
       <div className="relative" ref={importRef}>
         <button
           type="button"
