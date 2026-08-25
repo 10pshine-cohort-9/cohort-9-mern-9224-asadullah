@@ -23,35 +23,32 @@ const getCategories = async (req, res, next) => {
   }
 };
 
+const escapeRegex = (str) => {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 const createCategory = async (req, res, next) => {
   try {
     const { name } = req.body;
+    const userId = req.user.userId;
 
-    if (!name || typeof name !== "string" || !name.trim()) {
-      return res.status(400).json({
-        success: false,
-        message: "Category name is required",
-      });
-    }
-
-    const userId = getUserIdFromReq(req);
-
-    if (!userId) {
-      return res.status(401).json({ success: false, message: "Unauthorized access" });
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Category name is required" });
     }
 
     const trimmedName = name.trim();
 
+
+    const safeRegex = new RegExp(`^${escapeRegex(trimmedName)}$`, "i");
+
+  
     const existingCategory = await Category.findOne({
-      name: { $regex: new RegExp(`^${trimmedName}$`, "i") },
       user: userId,
+      name: safeRegex,
     });
 
     if (existingCategory) {
-      return res.status(400).json({
-        success: false,
-        message: "Category already exists",
-      });
+      return res.status(400).json({ message: "Category already exists" });
     }
 
     const category = await Category.create({
@@ -60,8 +57,7 @@ const createCategory = async (req, res, next) => {
     });
 
     res.status(201).json({
-      success: true,
-      message: "Category Created Successfully",
+      message: "Category created successfully",
       category,
     });
   } catch (error) {

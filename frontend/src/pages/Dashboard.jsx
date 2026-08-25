@@ -1,8 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-hot-toast'
-import {  Edit3, Search, FileText, Calendar, Plus, Sparkles, 
-  FolderOpen, Filter, X, RotateCcw, Pin, Archive, Trash2, Tag, FolderPlus 
+import {
+  Edit3, Search, FileText, Calendar, Plus, Sparkles,
+  FolderOpen, Filter, X, RotateCcw, Pin, Archive, Trash2, Tag, FolderPlus
 } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import api from '../services/api'
@@ -13,11 +14,11 @@ const Dashboard = () => {
   const [notes, setNotes] = useState([])
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('')
-  
+
   const [activeTab, setActiveTab] = useState(() => {
     return localStorage.getItem('dashboard_active_tab') || 'active'
   })
-  
+
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('newest')
@@ -45,42 +46,42 @@ const Dashboard = () => {
     }
   }
 
-  const fetchNotes = useCallback(async () => {
-    const token = localStorage.getItem('token')
-
-    if (!token) {
-      toast.error('Session expired. Please login again.')
-      navigate('/login', { replace: true })
-      return
-    }
-
+  const fetchNotes = async () => {
     try {
-      setLoading(true)
-      let url = '/notes?'
-      if (activeTab === 'archived') url += 'isArchived=true&'
-      else if (activeTab === 'trashed') url += 'isTrashed=true&'
-      else url += 'isArchived=false&isTrashed=false&'
+      setLoading(true);
+      const params = new URLSearchParams();
 
-      if (selectedCategory) url += `category=${selectedCategory}`
+      if (activeTab === 'archived') {
+        params.set('isArchived', 'true');
+      } else if (activeTab === 'trashed') {
+        params.set('isTrashed', 'true');
+      } else {
+        params.set('isArchived', 'false');
+        params.set('isTrashed', 'false');
+      }
 
-      const response = await api.get(url)
-      const data = Array.isArray(response.data) ? response.data : response.data?.notes || []
-      setNotes(data)
+      if (selectedCategory) {
+        params.set('category', selectedCategory);
+      }
+
+      const response = await api.get(`/notes?${params.toString()}`);
+      setNotes(response.data.notes || []);
     } catch (error) {
-      console.error('Fetch notes error:', error.response?.data || error)
-      toast.error(error.response?.data?.message || 'Failed to fetch notes')
+      console.error("Failed to fetch notes", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [navigate, activeTab, selectedCategory])
+  };
 
   useEffect(() => {
     fetchCategories()
   }, [])
 
   useEffect(() => {
-    fetchNotes()
-  }, [fetchNotes])
+    fetchNotes();
+  }, [activeTab, selectedCategory]);
+
+
 
   const handleResetFilters = () => {
     setSearchQuery('')
@@ -146,8 +147,8 @@ const Dashboard = () => {
       <Navbar />
 
       <main className="mx-auto max-w-7xl px-6 py-8">
-        
-     
+
+
         <div className="mb-8 flex flex-col justify-between gap-4 md:flex-row md:items-center border-b border-indigo-900/30 pb-6">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-2 shadow-sm">
@@ -162,24 +163,23 @@ const Dashboard = () => {
           </div>
 
           <div className="flex items-center gap-3">
-           
+
             <div className="flex items-center rounded-xl bg-[#0F1524] p-1.5 border border-slate-800 shadow-inner">
               {['active', 'archived', 'trashed'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => handleTabChange(tab)}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all duration-200 ${
-                    activeTab === tab
+                  className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all duration-200 ${activeTab === tab
                       ? 'bg-linear-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
-                  }`}
+                    }`}
                 >
                   {tab === 'active' ? 'Notes' : tab}
                 </button>
               ))}
             </div>
 
-           
+
             <div className="flex items-center gap-2 rounded-xl border border-indigo-500/20 bg-[#0F1524] px-4 py-2.5 text-sm font-medium text-slate-300 shadow-md">
               <FileText className="h-4 w-4 text-indigo-400" />
               <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Total:</span>
@@ -188,10 +188,10 @@ const Dashboard = () => {
           </div>
         </div>
 
-  
+
         <div className="mb-8 flex flex-col gap-4">
-          
-        
+
+
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
             <div className="relative w-full md:max-w-xl">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
@@ -219,7 +219,7 @@ const Dashboard = () => {
             </div>
           </div>
 
-         
+
           <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0C101D] p-3 rounded-2xl border border-slate-800/80 shadow-lg">
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative min-w-40">
@@ -277,7 +277,7 @@ const Dashboard = () => {
 
         </div>
 
-      
+
         {loading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {[1, 2, 3].map((i) => (
@@ -301,11 +301,10 @@ const Dashboard = () => {
             {filteredNotes.map((note) => (
               <div
                 key={note._id}
-                className={`group relative flex flex-col justify-between rounded-2xl border bg-linear-to-b from-[#0F1525] to-[#0A0E1A] p-6 transition-all duration-300 hover:-translate-y-1 ${
-                  note.isPinned
+                className={`group relative flex flex-col justify-between rounded-2xl border bg-linear-to-b from-[#0F1525] to-[#0A0E1A] p-6 transition-all duration-300 hover:-translate-y-1 ${note.isPinned
                     ? 'border-indigo-500/80 ring-1 ring-indigo-500/40 shadow-xl shadow-indigo-950/40'
                     : 'border-slate-800/90 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-950/20'
-                }`}
+                  }`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
@@ -319,145 +318,144 @@ const Dashboard = () => {
                     )}
                   </div>
 
-                  <div
-                    className="mt-3 text-xs text-slate-300/80 line-clamp-4 leading-relaxed font-normal"
-                    dangerouslySetInnerHTML={{ __html: note.content }}
-                  />
-                </div>
+                  <p className="mt-3 text-xs text-slate-300/80 line-clamp-4 leading-relaxed font-normal">
+                    {stripHtml(note.content)}
+                  </p>
 
-                {/* Card Action Row */}
-                <div className="mt-6 flex items-center justify-between border-t border-slate-800/80 pt-4">
-                  <span className="flex items-center gap-1.5 text-[11px] text-slate-400 font-semibold">
-                    <Calendar className="h-3.5 w-3.5 text-indigo-400" />
-                    {new Date(note.createdAt || Date.now()).toLocaleDateString()}
-                  </span>
+                  </div>
 
-                  <div className="flex items-center gap-1">
-                    {activeTab === 'active' && (
-                      <>
+
+                  <div className="mt-6 flex items-center justify-between border-t border-slate-800/80 pt-4">
+                    <span className="flex items-center gap-1.5 text-[11px] text-slate-400 font-semibold">
+                      <Calendar className="h-3.5 w-3.5 text-indigo-400" />
+                      {new Date(note.createdAt || Date.now()).toLocaleDateString()}
+                    </span>
+
+                    <div className="flex items-center gap-1">
+                      {activeTab === 'active' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => toggleStatus(note._id, { isPinned: !note.isPinned })}
+                            className={`rounded-lg p-2 transition-all ${note.isPinned
+                                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                                : 'text-slate-400 hover:bg-slate-800 hover:text-indigo-300'
+                              }`}
+                            title={note.isPinned ? 'Unpin' : 'Pin'}
+                          >
+                            <Pin className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => toggleStatus(note._id, { isArchived: true })}
+                            className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
+                            title="Archive"
+                          >
+                            <Archive className="h-4 w-4" />
+                          </button>
+
+                          <Link
+                            to={`/notes/edit/${note._id}`}
+                            className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
+                            title="Edit Note"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </Link>
+                        </>
+                      )}
+
+                      {activeTab === 'archived' && (
                         <button
                           type="button"
-                          onClick={() => toggleStatus(note._id, { isPinned: !note.isPinned })}
-                          className={`rounded-lg p-2 transition-all ${
-                            note.isPinned
-                              ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                              : 'text-slate-400 hover:bg-slate-800 hover:text-indigo-300'
-                          }`}
-                          title={note.isPinned ? 'Unpin' : 'Pin'}
-                        >
-                          <Pin className="h-4 w-4" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => toggleStatus(note._id, { isArchived: true })}
+                          onClick={() => toggleStatus(note._id, { isArchived: false })}
                           className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
-                          title="Archive"
-                        >
-                          <Archive className="h-4 w-4" />
-                        </button>
-
-                        <Link
-                          to={`/notes/edit/${note._id}`}
-                          className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
-                          title="Edit Note"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </Link>
-                      </>
-                    )}
-
-                    {activeTab === 'archived' && (
-                      <button
-                        type="button"
-                        onClick={() => toggleStatus(note._id, { isArchived: false })}
-                        className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
-                        title="Unarchive"
-                      >
-                        <RotateCcw className="h-4 w-4" />
-                      </button>
-                    )}
-
-                    {activeTab === 'trashed' ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => toggleStatus(note._id, { isTrashed: false })}
-                          className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
-                          title="Restore"
+                          title="Unarchive"
                         >
                           <RotateCcw className="h-4 w-4" />
                         </button>
-                        
+                      )}
+
+                      {activeTab === 'trashed' ? (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => toggleStatus(note._id, { isTrashed: false })}
+                            className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
+                            title="Restore"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteNote(note._id)}
+                            className="rounded-lg p-2 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all"
+                            title="Delete Permanently"
+                          >
+                            <Trash2 className="h-4 w-4 text-rose-400" />
+                          </button>
+                        </>
+                      ) : (
                         <button
                           type="button"
-                          onClick={() => handleDeleteNote(note._id)}
+                          onClick={() => toggleStatus(note._id, { isTrashed: true })}
                           className="rounded-lg p-2 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all"
-                          title="Delete Permanently"
+                          title="Move to Trash"
                         >
-                          <Trash2 className="h-4 w-4 text-rose-400" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
-                      </>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => toggleStatus(note._id, { isTrashed: true })}
-                        className="rounded-lg p-2 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all"
-                        title="Move to Trash"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
             ))}
-          </div>
-        )}
-
-        {showCatModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <form
-              onSubmit={handleCreateCategory}
-              className="w-full max-w-sm rounded-2xl bg-[#0F1524] border border-indigo-500/30 p-6 shadow-2xl space-y-4"
-            >
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="text-sm font-bold text-white">Create New Category</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowCatModal(false)}
-                  className="text-slate-400 hover:text-white"
-                >
-                  <X className="h-4 w-4" />
-                </button>
               </div>
-              <input
-                type="text"
-                placeholder="Category name (e.g. Work, Personal)..."
-                value={newCatName}
-                onChange={(e) => setNewCatName(e.target.value)}
-                className="w-full rounded-xl bg-[#131A2E] border border-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500"
-              />
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowCatModal(false)}
-                  className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-xs font-bold text-white transition-all shadow-md"
-                >
-                  Create
-                </button>
-              </div>
-            </form>
-          </div>
-        )}
+            )}
 
-      </main>
+            {showCatModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+                <form
+                  onSubmit={handleCreateCategory}
+                  className="w-full max-w-sm rounded-2xl bg-[#0F1524] border border-indigo-500/30 p-6 shadow-2xl space-y-4"
+                >
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <h3 className="text-sm font-bold text-white">Create New Category</h3>
+                    <button
+                      type="button"
+                      onClick={() => setShowCatModal(false)}
+                      className="text-slate-400 hover:text-white"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Category name (e.g. Work, Personal)..."
+                    value={newCatName}
+                    onChange={(e) => setNewCatName(e.target.value)}
+                    className="w-full rounded-xl bg-[#131A2E] border border-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500"
+                  />
+                  <div className="flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowCatModal(false)}
+                      className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 rounded-xl bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-xs font-bold text-white transition-all shadow-md"
+                    >
+                      Create
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+          </main>
     </div>
   )
 }

@@ -90,31 +90,34 @@ const EditNote = () => {
     div.innerHTML = html
     return div.textContent.trim()
   }
+const handleSubmit = async (e) => {
+  e.preventDefault()
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-
-    if (!title.trim() || !getPlainText(content)) {
-      toast.error('Please fill in both title and content')
-      return
-    }
-
-    setSubmitting(true)
-
-    try {
-      const payload = { title, content }
-      if (category) payload.category = category
-
-      await api.patch(`/notes/${id}`, payload)
-      toast.success('Note updated successfully')
-      navigate('/dashboard')
-    } catch (error) {
-      console.error('Update note error:', error.response?.data || error)
-      toast.error(error.response?.data?.message || 'Failed to update note')
-    } finally {
-      setSubmitting(false)
-    }
+  if (!title.trim() || !getPlainText(content)) {
+    toast.error('Please fill in both title and content')
+    return
   }
+
+  setSubmitting(true)
+
+  try {
+    const payload = { 
+      title, 
+      content, 
+      category: category || null 
+    }
+
+    await api.patch(`/notes/${id}`, payload)
+    toast.success('Note updated successfully')
+    navigate('/dashboard')
+  } catch (error) {
+    console.error('Update note error:', error.response?.data || error)
+    toast.error(error.response?.data?.message || 'Failed to update note')
+  } finally {
+    setSubmitting(false)
+  }
+}
+
 
   return (
     <div className="min-h-screen bg-[#070A12] text-slate-100 font-sans antialiased selection:bg-indigo-500 selection:text-white">

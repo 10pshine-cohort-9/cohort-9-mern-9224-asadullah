@@ -13,6 +13,8 @@ router.post('/', authMiddleware, createNote)
 
 router.get('/', authMiddleware, getNotes)
 
+router.get('/trash', authMiddleware, getTrashedNotes);
+
 router.get('/:id', authMiddleware, getNoteById)
 
 router.patch('/:id', authMiddleware, updateNote)
@@ -24,7 +26,6 @@ router.delete('/:id', authMiddleware,deleteNote)
 router.post('/bulk-import', authMiddleware, bulkImportNotes);
 
 
-router.get('/trash', authMiddleware, getTrashedNotes);
 
 
 

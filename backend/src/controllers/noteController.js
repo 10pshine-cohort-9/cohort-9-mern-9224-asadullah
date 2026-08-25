@@ -3,47 +3,44 @@ const logger = require('../utils/logger');
 const mongoose = require('mongoose')
 const categoryModel = require('../models/Category');
 
+
+
 const createNote = async (req, res, next) => {
   try {
-    
-    const { title, content, category } = req.body; 
+    const { title, content, category, tags } = req.body;
+    const userId = req.user.userId;
 
-    if (
-      typeof title !== "string" ||
-      !title.trim() ||
-      typeof content !== "string" ||
-      !content.trim()
-    ) {
-      return res.status(400).json({
-        message: "Title and content must be non-empty strings",
-      });
+    if (!title || !title.trim()) {
+      return res.status(400).json({ message: "Title is required" });
     }
 
-    const userId = req.user._id || req.user.userId || req.user.id;
+    if (category) {
+      const categoryExists = await Category.exists({ _id: category, user: userId });
+      if (!categoryExists) {
+        return res.status(400).json({ message: "Invalid or unauthorized category" });
+      }
+    }
 
-    const note = await noteModel.create({
+    const note = await Note.create({
       title: title.trim(),
-      content: content.trim(),
-      category: category || null, 
+      content,
+      category: category || null,
+      tags: tags || [],
       user: userId,
     });
 
-    await note.populate("category", "name");
+    if (category) {
+      await note.populate("category", "name");
+    }
 
-    logger.info(
-      { noteId: note._id, userId: userId },
-      "Note created successfully"
-    );
-
-    return res.status(201).json({
-      message: "Note Created Successfully",
+    res.status(201).json({
+      message: "Note created successfully",
       note,
     });
   } catch (error) {
     next(error);
   }
 };
-
 
 const getNotes = async (req, res, next) => {
   try {
@@ -154,91 +151,47 @@ const getNoteById = async (req, res, next) => {
 
 }
 
-
 const updateNote = async (req, res, next) => {
-    const noteId = req.params.id
-    const user = req.user.userId
-    const { title, content, category } = req.body 
+  try {
+    const { id } = req.params;
+    const { title, content, category, tags } = req.body;
+    const userId = req.user.userId;
 
-    try {
-        if (!mongoose.isObjectIdOrHexString(noteId)) {
-            return res.status(400).json({
-                message: "Invalid note ID"
-            })
-        }
-
-    
-        if (title === undefined && content === undefined && category === undefined) {
-            return res.status(400).json({
-                message: "Provide at least one field to update"
-            })
-        }
-
-        const updateData = {}
-
-        if (title !== undefined) {
-            if (typeof title !== 'string' || !title.trim()) {
-                return res.status(400).json({
-                    message: "Title must be a non-empty string"
-                })
-            }
-            updateData.title = title.trim()
-        }
-
-        if (content !== undefined) {
-            if (typeof content !== 'string' || !content.trim()) {
-                return res.status(400).json({
-                    message: "Content must be a non-empty string"
-                })
-            }
-            updateData.content = content.trim()
-        }
-
-       
-        if (category !== undefined) {
-            if (category === "" || category === null || category === "no category") {
-                updateData.category = null
-            } else if (mongoose.isObjectIdOrHexString(category)) {
-                updateData.category = category
-            }
-        }
-
-     
-        const updatedNote = await noteModel.findOneAndUpdate(
-            {
-                user,
-                _id: noteId
-            },
-            updateData,
-            {
-                new: true,
-                runValidators: true
-            }
-        ).populate('category', 'name _id') 
-
-        if (!updatedNote) {
-            return res.status(404).json({
-                message: "Note not found"
-            });
-        }
-
-        logger.info(
-            {
-                noteId,
-                userId: user
-            },
-            "Note updated successfully"
-        )
-
-        return res.status(200).json({
-            message: "note Updated",
-            note: updatedNote
-        })
-
-    } catch (error) {
-        next(error)
+    if (category) {
+      const categoryExists = await Category.exists({ _id: category, user: userId });
+      if (!categoryExists) {
+        return res.status(400).json({ message: "Invalid or unauthorized category" });
+      }
     }
-}
+
+    const updateData = {};
+    if (title !== undefined) updateData.title = title.trim();
+    if (content !== undefined) updateData.content = content;
+    if (category !== undefined) updateData.category = category || null;
+    if (tags !== undefined) updateData.tags = tags;
+
+    const note = await Note.findOneAndUpdate(
+      { _id: id, user: userId },
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!note) {
+      return res.status(404).json({ message: "Note not found" });
+    }
+
+    if (note.category) {
+      await note.populate("category", "name");
+    }
+
+    res.status(200).json({
+      message: "Note updated successfully",
+      note,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 
