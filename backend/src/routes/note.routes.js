@@ -3,7 +3,8 @@ const express = require('express')
 const router = express.Router()
 
 const authMiddleware = require('../middleware/auth.middleware')
-const {createNote, getNotes, getNoteById,updateNote, deleteNote} = require('../controllers/noteController')
+
+const {createNote, getNotes, getNoteById,updateNote, deleteNote,toggleNoteStatus, bulkImportNotes, getTrashedNotes} = require('../controllers/noteController')
 
 
 
@@ -16,7 +17,14 @@ router.get('/:id', authMiddleware, getNoteById)
 
 router.patch('/:id', authMiddleware, updateNote)
 
+router.patch("/:id/status", authMiddleware, toggleNoteStatus);
+
 router.delete('/:id', authMiddleware,deleteNote)
+
+router.post('/bulk-import', authMiddleware, bulkImportNotes);
+
+
+router.get('/trash', authMiddleware, getTrashedNotes);
 
 
 

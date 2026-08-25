@@ -2,6 +2,7 @@ const express = require('express')
 
 const authRoutes = require('./routes/auth.routes')
 const noteRoutes = require('./routes/note.routes')
+const categoryRoutes = require("./routes/category.routes");
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/error.middleware')
 const httpLogger = require('./middleware/httpLogger.middleware')
@@ -35,6 +36,8 @@ app.get('/',(req,res)=>{
 app.use('/api/auth', authRoutes);
 
 app.use('/api/notes' , noteRoutes)
+
+app.use("/api/categories", categoryRoutes);
 
 app.use(errorHandler)
 
