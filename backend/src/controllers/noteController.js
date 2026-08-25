@@ -15,7 +15,12 @@ const createNote = async (req, res, next) => {
     }
 
     let categoryId = null;
-    if (category && mongoose.isObjectIdOrHexString(category)) {
+
+    if (category !== undefined && category !== null && category !== "") {
+      if (!mongoose.isObjectIdOrHexString(category)) {
+        return res.status(400).json({ message: "Invalid category ID format" });
+      }
+
       const categoryExists = await categoryModel.exists({ _id: category, user });
       if (!categoryExists) {
         return res.status(400).json({ message: "Invalid or unauthorized category" });
@@ -45,6 +50,8 @@ const createNote = async (req, res, next) => {
     next(error);
   }
 };
+
+
 
 const getNotes = async (req, res, next) => {
   try {
@@ -182,15 +189,20 @@ const updateNote = async (req, res, next) => {
     }
 
     if (category !== undefined) {
-      if (category && mongoose.isObjectIdOrHexString(category)) {
+      if (category === null || category === "") {
+        updateData.category = null;
+      } else {
+        if (!mongoose.isObjectIdOrHexString(category)) {
+          return res.status(400).json({ message: "Invalid category ID format" });
+        }
+
         const categoryExists = await categoryModel.exists({ _id: category, user });
         if (!categoryExists) {
           return res.status(400).json({ message: "Invalid or unauthorized category" });
         }
         updateData.category = category;
-      } else {
-        updateData.category = null;
       }
+
     }
 
     const updatedNote = await noteModel.findOneAndUpdate(
