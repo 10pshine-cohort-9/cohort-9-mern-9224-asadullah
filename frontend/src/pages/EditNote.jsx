@@ -90,6 +90,8 @@ const EditNote = () => {
     div.innerHTML = html
     return div.textContent.trim()
   }
+
+
 const handleSubmit = async (e) => {
   e.preventDefault()
 

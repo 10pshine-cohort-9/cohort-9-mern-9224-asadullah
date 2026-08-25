@@ -8,30 +8,34 @@ const categoryModel = require('../models/Category');
 const createNote = async (req, res, next) => {
   try {
     const { title, content, category, tags } = req.body;
-    const userId = req.user.userId;
+    const user = req.user.userId;
 
-    if (!title || !title.trim()) {
+    if (!title || typeof title !== 'string' || !title.trim()) {
       return res.status(400).json({ message: "Title is required" });
     }
 
-    if (category) {
-      const categoryExists = await Category.exists({ _id: category, user: userId });
+    let categoryId = null;
+    if (category && mongoose.isObjectIdOrHexString(category)) {
+      const categoryExists = await categoryModel.exists({ _id: category, user });
       if (!categoryExists) {
         return res.status(400).json({ message: "Invalid or unauthorized category" });
       }
+      categoryId = category;
     }
 
-    const note = await Note.create({
+    const note = await noteModel.create({
       title: title.trim(),
-      content,
-      category: category || null,
+      content: content || "",
+      category: categoryId,
       tags: tags || [],
-      user: userId,
+      user,
     });
 
-    if (category) {
-      await note.populate("category", "name");
+    if (note.category) {
+      await note.populate("category", "name _id");
     }
+
+    logger.info({ noteId: note._id, userId: user }, "Note created successfully");
 
     res.status(201).json({
       message: "Note created successfully",
@@ -150,49 +154,65 @@ const getNoteById = async (req, res, next) => {
     }
 
 }
-
 const updateNote = async (req, res, next) => {
   try {
-    const { id } = req.params;
+    const noteId = req.params.id;
+    const user = req.user.userId;
     const { title, content, category, tags } = req.body;
-    const userId = req.user.userId;
 
-    if (category) {
-      const categoryExists = await Category.exists({ _id: category, user: userId });
-      if (!categoryExists) {
-        return res.status(400).json({ message: "Invalid or unauthorized category" });
-      }
+    if (!mongoose.isObjectIdOrHexString(noteId)) {
+      return res.status(400).json({ message: "Invalid note ID" });
     }
 
     const updateData = {};
-    if (title !== undefined) updateData.title = title.trim();
-    if (content !== undefined) updateData.content = content;
-    if (category !== undefined) updateData.category = category || null;
-    if (tags !== undefined) updateData.tags = tags;
 
-    const note = await Note.findOneAndUpdate(
-      { _id: id, user: userId },
+    if (title !== undefined) {
+      if (typeof title !== 'string' || !title.trim()) {
+        return res.status(400).json({ message: "Title must be a non-empty string" });
+      }
+      updateData.title = title.trim();
+    }
+
+    if (content !== undefined) {
+      updateData.content = content;
+    }
+
+    if (tags !== undefined) {
+      updateData.tags = tags;
+    }
+
+    if (category !== undefined) {
+      if (category && mongoose.isObjectIdOrHexString(category)) {
+        const categoryExists = await categoryModel.exists({ _id: category, user });
+        if (!categoryExists) {
+          return res.status(400).json({ message: "Invalid or unauthorized category" });
+        }
+        updateData.category = category;
+      } else {
+        updateData.category = null;
+      }
+    }
+
+    const updatedNote = await noteModel.findOneAndUpdate(
+      { _id: noteId, user },
       updateData,
       { new: true, runValidators: true }
-    );
+    ).populate('category', 'name _id');
 
-    if (!note) {
+    if (!updatedNote) {
       return res.status(404).json({ message: "Note not found" });
     }
 
-    if (note.category) {
-      await note.populate("category", "name");
-    }
+    logger.info({ noteId, userId: user }, "Note updated successfully");
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Note updated successfully",
-      note,
+      note: updatedNote,
     });
   } catch (error) {
     next(error);
   }
 };
-
 
 
 const deleteNote = async (req, res, next) => {
@@ -293,7 +313,7 @@ const getTrashedNotes = async (req, res, next) => {
   try {
     const userId = req.user.userId;
     const trashedNotes = await noteModel
-      .find({ user: userId, isTrash: true })
+      .find({ user: userId, isTrashed: true })
       .populate('category', 'name _id');
 
     return res.status(200).json({

@@ -1,8 +1,15 @@
 const Category = require("../models/Category");
 
+
+const escapeRegex = (str) => {
+  if (!str) return '';
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
 const getUserIdFromReq = (req) => {
   return req.user?._id || req.user?.id || req.user?.userId;
 };
+
 
 const getCategories = async (req, res, next) => {
   try {
@@ -23,25 +30,23 @@ const getCategories = async (req, res, next) => {
   }
 };
 
-const escapeRegex = (str) => {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-};
 
 const createCategory = async (req, res, next) => {
   try {
     const { name } = req.body;
-    const userId = req.user.userId;
+    const userId = getUserIdFromReq(req); // FIXED: Safe helper used here
+
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized access" });
+    }
 
     if (!name || !name.trim()) {
       return res.status(400).json({ message: "Category name is required" });
     }
 
     const trimmedName = name.trim();
-
-
     const safeRegex = new RegExp(`^${escapeRegex(trimmedName)}$`, "i");
 
-  
     const existingCategory = await Category.findOne({
       user: userId,
       name: safeRegex,
@@ -57,13 +62,18 @@ const createCategory = async (req, res, next) => {
     });
 
     res.status(201).json({
+      success: true,
       message: "Category created successfully",
       category,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(400).json({ message: "Category already exists" });
+    }
     next(error);
   }
 };
+
 
 const deleteCategory = async (req, res, next) => {
   try {

@@ -103,6 +103,18 @@ const Dashboard = () => {
     }
   }
 
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (!window.confirm('Are you sure you want to delete this category?')) return
+    try {
+      await api.delete(`/categories/${categoryId}`)
+      toast.success('Category deleted')
+      fetchCategories()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to delete category')
+    }
+  }
+
   const toggleStatus = async (noteId, statusData) => {
     try {
       await api.patch(`/notes/${noteId}/status`, statusData)
@@ -170,8 +182,8 @@ const Dashboard = () => {
                   key={tab}
                   onClick={() => handleTabChange(tab)}
                   className={`px-4 py-2 rounded-lg text-xs font-bold capitalize transition-all duration-200 ${activeTab === tab
-                      ? 'bg-linear-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                    ? 'bg-linear-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
                     }`}
                 >
                   {tab === 'active' ? 'Notes' : tab}
@@ -189,9 +201,8 @@ const Dashboard = () => {
         </div>
 
 
+       
         <div className="mb-8 flex flex-col gap-4">
-
-
           <div className="flex flex-col md:flex-row items-center justify-between gap-3">
             <div className="relative w-full md:max-w-xl">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-400" />
@@ -214,12 +225,21 @@ const Dashboard = () => {
               )}
             </div>
 
-            <div className="w-full md:w-auto flex justify-end">
+            {/* Single Row Action Controls (Export/Import + Category Button) */}
+            <div className="w-full md:w-auto flex items-center justify-end gap-2.5 shrink-0">
               <JsonExportImport notes={notes} setNotes={setNotes} categories={categories} />
+              <button
+                type="button"
+                onClick={() => setShowCatModal(true)}
+                className="flex items-center gap-2 rounded-xl bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white px-3.5 py-2 text-xs font-bold text-indigo-300 transition-all shadow-sm shrink-0 whitespace-nowrap"
+              >
+                <FolderPlus className="h-4 w-4" />
+                <span>+ Category</span>
+              </button>
             </div>
           </div>
 
-
+          {/* Category Dropdown & Sort Controls */}
           <div className="flex flex-wrap items-center justify-between gap-3 bg-[#0C101D] p-3 rounded-2xl border border-slate-800/80 shadow-lg">
             <div className="flex flex-wrap items-center gap-3">
               <div className="relative min-w-40">
@@ -264,17 +284,7 @@ const Dashboard = () => {
                 </button>
               )}
             </div>
-
-            <button
-              type="button"
-              onClick={() => setShowCatModal(true)}
-              className="flex items-center gap-2 rounded-xl bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-600 hover:text-white px-3.5 py-2 text-xs font-bold text-indigo-300 transition-all shadow-sm"
-            >
-              <FolderPlus className="h-4 w-4" />
-              <span>+ Category</span>
-            </button>
           </div>
-
         </div>
 
 
@@ -302,8 +312,8 @@ const Dashboard = () => {
               <div
                 key={note._id}
                 className={`group relative flex flex-col justify-between rounded-2xl border bg-linear-to-b from-[#0F1525] to-[#0A0E1A] p-6 transition-all duration-300 hover:-translate-y-1 ${note.isPinned
-                    ? 'border-indigo-500/80 ring-1 ring-indigo-500/40 shadow-xl shadow-indigo-950/40'
-                    : 'border-slate-800/90 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-950/20'
+                  ? 'border-indigo-500/80 ring-1 ring-indigo-500/40 shadow-xl shadow-indigo-950/40'
+                  : 'border-slate-800/90 hover:border-indigo-500/50 hover:shadow-2xl hover:shadow-indigo-950/20'
                   }`}
               >
                 <div>
@@ -318,144 +328,171 @@ const Dashboard = () => {
                     )}
                   </div>
 
-                  <p className="mt-3 text-xs text-slate-300/80 line-clamp-4 leading-relaxed font-normal">
-                    {stripHtml(note.content)}
-                  </p>
+                  <div
+                    className="mt-3 text-xs text-slate-300/80 line-clamp-4 leading-relaxed font-normal"
+                    dangerouslySetInnerHTML={{ __html: note.content }}
+                    onClick={(e) => {
+                      if (e.target.tagName === 'A') {
+                        e.preventDefault();
+                        window.open(e.target.href, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                  />
 
-                  </div>
+                </div>
 
 
-                  <div className="mt-6 flex items-center justify-between border-t border-slate-800/80 pt-4">
-                    <span className="flex items-center gap-1.5 text-[11px] text-slate-400 font-semibold">
-                      <Calendar className="h-3.5 w-3.5 text-indigo-400" />
-                      {new Date(note.createdAt || Date.now()).toLocaleDateString()}
-                    </span>
+                <div className="mt-6 flex items-center justify-between border-t border-slate-800/80 pt-4">
+                  <span className="flex items-center gap-1.5 text-[11px] text-slate-400 font-semibold">
+                    <Calendar className="h-3.5 w-3.5 text-indigo-400" />
+                    {new Date(note.createdAt || Date.now()).toLocaleDateString()}
+                  </span>
 
-                    <div className="flex items-center gap-1">
-                      {activeTab === 'active' && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => toggleStatus(note._id, { isPinned: !note.isPinned })}
-                            className={`rounded-lg p-2 transition-all ${note.isPinned
-                                ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
-                                : 'text-slate-400 hover:bg-slate-800 hover:text-indigo-300'
-                              }`}
-                            title={note.isPinned ? 'Unpin' : 'Pin'}
-                          >
-                            <Pin className="h-4 w-4" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => toggleStatus(note._id, { isArchived: true })}
-                            className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
-                            title="Archive"
-                          >
-                            <Archive className="h-4 w-4" />
-                          </button>
-
-                          <Link
-                            to={`/notes/edit/${note._id}`}
-                            className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
-                            title="Edit Note"
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </Link>
-                        </>
-                      )}
-
-                      {activeTab === 'archived' && (
+                  <div className="flex items-center gap-1">
+                    {activeTab === 'active' && (
+                      <>
                         <button
                           type="button"
-                          onClick={() => toggleStatus(note._id, { isArchived: false })}
+                          onClick={() => toggleStatus(note._id, { isPinned: !note.isPinned })}
+                          className={`rounded-lg p-2 transition-all ${note.isPinned
+                            ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-indigo-300'
+                            }`}
+                          title={note.isPinned ? 'Unpin' : 'Pin'}
+                        >
+                          <Pin className="h-4 w-4" />
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => toggleStatus(note._id, { isArchived: true })}
                           className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
-                          title="Unarchive"
+                          title="Archive"
+                        >
+                          <Archive className="h-4 w-4" />
+                        </button>
+
+                        <Link
+                          to={`/notes/edit/${note._id}`}
+                          className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
+                          title="Edit Note"
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </Link>
+                      </>
+                    )}
+
+                    {activeTab === 'archived' && (
+                      <button
+                        type="button"
+                        onClick={() => toggleStatus(note._id, { isArchived: false })}
+                        className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
+                        title="Unarchive"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </button>
+                    )}
+
+                    {activeTab === 'trashed' ? (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => toggleStatus(note._id, { isTrashed: false })}
+                          className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
+                          title="Restore"
                         >
                           <RotateCcw className="h-4 w-4" />
                         </button>
-                      )}
 
-                      {activeTab === 'trashed' ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => toggleStatus(note._id, { isTrashed: false })}
-                            className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition-all"
-                            title="Restore"
-                          >
-                            <RotateCcw className="h-4 w-4" />
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteNote(note._id)}
-                            className="rounded-lg p-2 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all"
-                            title="Delete Permanently"
-                          >
-                            <Trash2 className="h-4 w-4 text-rose-400" />
-                          </button>
-                        </>
-                      ) : (
                         <button
                           type="button"
-                          onClick={() => toggleStatus(note._id, { isTrashed: true })}
+                          onClick={() => handleDeleteNote(note._id)}
                           className="rounded-lg p-2 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all"
-                          title="Move to Trash"
+                          title="Delete Permanently"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-rose-400" />
                         </button>
-                      )}
-                    </div>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => toggleStatus(note._id, { isTrashed: true })}
+                        className="rounded-lg p-2 text-slate-400 hover:bg-rose-500/10 hover:text-rose-400 transition-all"
+                        title="Move to Trash"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
+              </div>
             ))}
-              </div>
-            )}
+          </div>
+        )}
 
-            {showCatModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-                <form
-                  onSubmit={handleCreateCategory}
-                  className="w-full max-w-sm rounded-2xl bg-[#0F1524] border border-indigo-500/30 p-6 shadow-2xl space-y-4"
+   
+        {showCatModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+            <div className="w-full max-w-sm rounded-2xl bg-[#0F1524] border border-indigo-500/30 p-6 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="text-sm font-bold text-white">Manage Categories</h3>
+                <button
+                  type="button"
+                  onClick={() => setShowCatModal(false)}
+                  className="text-slate-400 hover:text-white"
                 >
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <h3 className="text-sm font-bold text-white">Create New Category</h3>
-                    <button
-                      type="button"
-                      onClick={() => setShowCatModal(false)}
-                      className="text-slate-400 hover:text-white"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Category name (e.g. Work, Personal)..."
-                    value={newCatName}
-                    onChange={(e) => setNewCatName(e.target.value)}
-                    className="w-full rounded-xl bg-[#131A2E] border border-slate-800 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500"
-                  />
-                  <div className="flex justify-end gap-2 pt-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowCatModal(false)}
-                      className="px-4 py-2 text-xs font-medium text-slate-400 hover:text-white"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-4 py-2 rounded-xl bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-xs font-bold text-white transition-all shadow-md"
-                    >
-                      Create
-                    </button>
-                  </div>
-                </form>
+                  <X className="h-4 w-4" />
+                </button>
               </div>
-            )}
 
-          </main>
+        
+              <form onSubmit={handleCreateCategory} className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="New category name..."
+                  value={newCatName}
+                  onChange={(e) => setNewCatName(e.target.value)}
+                  className="w-full rounded-xl bg-[#131A2E] border border-slate-800 px-3.5 py-2 text-sm text-white placeholder-slate-500 outline-none focus:border-indigo-500"
+                />
+                <button
+                  type="submit"
+                  className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-bold text-white transition-all whitespace-nowrap"
+                >
+                  Add
+                </button>
+              </form>
+
+          
+              <div className="max-h-48 overflow-y-auto space-y-2 pt-2 border-t border-slate-800/80">
+                <p className="text-[11px] font-semibold text-slate-400 uppercase">Existing Categories:</p>
+                {categories.length === 0 ? (
+                  <p className="text-xs text-slate-500">No categories added yet.</p>
+                ) : (
+                  categories.map((cat) => (
+                    <div
+                      key={cat._id}
+                      className="flex items-center justify-between bg-[#131A2E] px-3 py-2 rounded-lg border border-slate-800/60"
+                    >
+                      <span className="text-xs text-slate-200 font-medium">{cat.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCategory(cat._id)}
+                        className="text-slate-400 hover:text-rose-400 p-1 transition-colors"
+                        title="Delete Category"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+
+
+      </main>
     </div>
   )
 }

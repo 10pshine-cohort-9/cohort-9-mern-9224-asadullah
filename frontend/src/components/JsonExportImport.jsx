@@ -171,12 +171,15 @@ const processAndImportNotes = async (validNotes) => {
     if (notes.length === 0) return toast.error('No notes to export')
 
     const txtContent = notes
-      .map(
-        (note) =>
-          `TITLE: ${note.title || 'Untitled'}\nCATEGORY: ${getCategoryName(
-            note.category
-          )}\nCONTENT:\n${stripHtml(note.content || '')}\n----------------------------------------\n`
-      )
+      .map((note) => {
+        const payload = JSON.stringify({
+          title: note.title || 'Untitled',
+          category: getCategoryName(note.category),
+          content: stripHtml(note.content || ''),
+        })
+        const base64Data = btoa(unescape(encodeURIComponent(payload)))
+        return `NOTE_START:${base64Data}:NOTE_END`
+      })
       .join('\n')
 
     const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' })
@@ -184,7 +187,9 @@ const processAndImportNotes = async (validNotes) => {
     const link = document.createElement('a')
     link.href = url
     link.download = `notes_backup_${Date.now()}.txt`
+    document.body.appendChild(link)
     link.click()
+    document.body.removeChild(link)
     URL.revokeObjectURL(url)
     toast.success('Exported as TXT')
   }
@@ -237,7 +242,7 @@ const processAndImportNotes = async (validNotes) => {
     reader.readAsArrayBuffer(file)
   }
 
-  const handleImportTxt = (e) => {
+const handleImportTxt = (e) => {
     const file = e.target.files[0]
     if (!file) return
 
@@ -245,25 +250,32 @@ const processAndImportNotes = async (validNotes) => {
     reader.onload = async (event) => {
       try {
         const text = event.target.result
-        const blocks = text.split('----------------------------------------')
+        const lines = text.split('\n')
+        const parsedNotes = []
 
-        const parsedNotes = blocks
-          .map((block) => {
-            const titleMatch = block.match(/TITLE:\s*(.*)/i)
-            const catMatch = block.match(/CATEGORY:\s*(.*)/i)
-            const contentMatch = block.match(/CONTENT:\s*([\s\S]*)/i)
+        lines.forEach((line) => {
+          const trimmedLine = line.trim()
+          if (trimmedLine.startsWith('NOTE_START:') && trimmedLine.endsWith(':NOTE_END')) {
+            try {
+              const base64Data = trimmedLine
+                .replace('NOTE_START:', '')
+                .replace(':NOTE_END', '')
+              const jsonStr = decodeURIComponent(escape(atob(base64Data)))
+              const noteObj = JSON.parse(jsonStr)
 
-            const title = titleMatch ? titleMatch[1].trim() : ''
-            const rawCategory = catMatch ? catMatch[1].trim() : ''
-            const content = contentMatch ? contentMatch[1].trim() : ''
-
-            return {
-              title: title || file.name.replace('.txt', ''),
-              content: content || block.trim(),
-              category: resolveCategoryId(rawCategory),
+              if (noteObj.title && noteObj.content) {
+                parsedNotes.push({
+                  title: noteObj.title,
+                  content: noteObj.content,
+                  category: resolveCategoryId(noteObj.category),
+                  categoryName: noteObj.category, // Backend bulk-import ke liye
+                })
+              }
+            } catch (err) {
+              console.error('Invalid line format during TXT import', err)
             }
-          })
-          .filter((n) => n.title && n.content)
+          }
+        })
 
         if (!parsedNotes.length) return toast.error('No valid content found in TXT')
 
