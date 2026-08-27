@@ -335,7 +335,7 @@ const Dashboard = () => {
                   </div>
 
                   <div
-                    className="mt-3 text-xs text-slate-300/80 line-clamp-4 leading-relaxed font-normal break-all [overflow-wrap:anywhere] [&_*]:break-all"
+                    className="mt-3 text-xs text-slate-300/80 line-clamp-4 leading-relaxed font-normal [overflow-wrap:anywhere] [&_*]:[overflow-wrap:anywhere]"
                     dangerouslySetInnerHTML={{ __html: note.content }}
                     onClick={(e) => {
                       if (e.target.tagName === 'A') {
