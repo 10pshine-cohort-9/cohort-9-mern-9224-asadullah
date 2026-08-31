@@ -11,12 +11,23 @@ async function registerUser(req, res,next) {
 
         if (!name || !email || !password) return res.status(400).json({ message: 'fill all field' })
 
+ 
 
         if (typeof password !== 'string') {
             return res.status(400).json({
                 message: 'Password must be a string'
             });
         }
+
+
+           if (!password || password.length < 8) {
+            return res.status(400).json({
+                success: false,
+                message: "Password must be at least 8 characters long",
+            });
+        }
+
+
 
         if (Buffer.byteLength(password, 'utf8') > 72) {
             return res.status(400).json({
