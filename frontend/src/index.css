@@ -38,12 +38,16 @@
 
 
 
-h1, .ql-syntax, .ql-size-huge, .rendered-note h1 {
-  font-size: 1.75rem !important;
+.ql-editor h1, 
+.ql-editor .ql-syntax, 
+.ql-editor .ql-size-huge, 
+.rendered-note h1, 
+.note-content h1 {
+  font-size: 1.5rem !important;
   font-weight: 700 !important;
   color: #ffffff !important;
   margin-top: 0.5rem !important;
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0.35rem !important;
   line-height: 1.3 !important;
 }
 
@@ -89,10 +93,11 @@ li[data-list="bullet"], li[data-list="ordered"] {
 }
 
 
-.note-card-box {
-  max-height: 100px !important;
+.note-content, .rendered-note { 
+  max-height: 100px !important; 
   overflow: hidden !important;
 }
+
 
 .note-card-box h1, .note-card-box .ql-size-huge {
   font-size: 1rem !important;
